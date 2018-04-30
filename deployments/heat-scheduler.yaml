@@ -1,0 +1,54 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  labels:
+    component: scheduler
+    tier: control-plane
+    app: heat-scheduler
+  name: heat-scheduler
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: heat-scheduler
+  template:
+    metadata:
+      labels:
+        component: scheduler
+        tier: control-plane
+        app: heat-scheduler
+        version: second
+    spec:
+      serviceAccountName: super
+      containers:
+      - name: extender
+        image: nerdalize/heat-scheduler-extender:0.2.2
+        ports:
+          - containerPort: 8100
+      - name: heat-scheduler
+        image: mirrorgooglecontainers/kube-scheduler:v1.10.2
+        command: [/usr/local/bin/kube-scheduler,
+                  --address=0.0.0.0,
+                  --scheduler-name=heat-scheduler,
+                  --policy-configmap=scheduler-config,
+                  --policy-configmap-namespace=kube-system,
+                  --leader-elect=false]
+        imagePullPolicy: Always
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 10251
+          initialDelaySeconds: 15
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 10251
+        resources:
+          requests:
+            cpu: '0.1'
+        securityContext:
+          privileged: false
+        volumeMounts: []
+      hostNetwork: false
+      hostPID: false
