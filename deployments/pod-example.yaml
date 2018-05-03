@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: data-cruncher
+spec:
+  schedulerName: "heat-scheduler"
+  containers:
+  - name: data-cruncher
+    image: nerdalize/heavy-data-cruncher
+    command: ["sleep", "5"]
